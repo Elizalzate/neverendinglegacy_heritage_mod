@@ -180,7 +180,7 @@ func:function()
 		req:{'fire-making':true,'woodcutting':true,'enablelogfires':'on'},
 	};
 	G.getDict('firekeeper').effects.push({
-		type:'convert',from:{'log':1},into:{'fire pit':1},every:5,mode:'log fires'
+		type:'convert',from:{'log':1},into:{'fire pit':10},every:5,mode:'log fires'
 	});
 
 // callback function to effect changes when setting is toggled
@@ -225,10 +225,10 @@ func:function()
 			G.middleText('- Cremation Disabled -');
 	// remove tech
 			for (i in G.techsOwned) {
-				if (G.techsOwned[i].tech.name == 'cremation') {
+				if (G.techsOwned[i].tech.name == 'Cremation') {
 					G.techsOwned.splice(i,1);
 					G.techsOwnedNames.splice(i,1);
-					G.applyKnowEffects(G.getDict('cremation'),true,true);
+					G.applyKnowEffects(G.getDict('Cremation'),true,true);
 					G.update['tech']();
 					break;
 				}
@@ -240,7 +240,7 @@ func:function()
 	};
 
 	new G.Res({
-		name:'urn',
+		name:'Urn',
 		desc:'A [pot] filled with the ashes of a loved one from [cremation].//May slowly boost [faith] when kept.',
 //		icon:[11,7,13,5],
 		icon:[4,1,'heritageSheet'],
@@ -255,7 +255,7 @@ func:function()
 
 // Add new research to unlock cremation	
 	new G.Tech({
-		name:'cremation',
+		name:'Cremation',
 		desc:'@Corpses can be ritually burned to promote health and spirituality.',
 		icon:[0,1,'heritageSheet'],
 		cost:{'insight':10},
@@ -265,12 +265,12 @@ func:function()
 	});
 
 // Add cremate mode to firekeepers with the required effect
-	G.getDict('firekeeper').modes['cremate']={
-		name:'cremate',
+	G.getDict('firekeeper').modes['Cremate']={
+		name:'Cremate',
 		desc:'Burn 1 [corpse] with [fire pit,fire] on a pyre of 10 [log]s, and put the ashes into a [pot] to make an [urn]',
 //		icon:[16,2,8,3,13,7],
 		icon:[2,1,'heritageSheet'],
-		req:{'cremation':true,'enablecremation':"on"}
+		req:{'Cremation':true,'enablecremation':"on"}
 	};
 	G.getDict('firekeeper').effects.push({
 		type:'convert',from:{'corpse':1,'pot':1,'log':30,'fire pit':0.5},into:{'urn':1},every:10,mode:'cremate'
@@ -286,6 +286,80 @@ func:function()
 			'onChange':{func:G.callbackEnableCremation}
 		},
 	});
+
+/************************************************
+ *                   BAKING                     *
+ ************************************************  
+ */
+ G.callbackEnableBaking=function()
+ {
+	 if (G.checkHSetting('enablebaking') == "on") {
+		 G.middleText('- Baking Enabled -');
+	 }
+	 else {
+		 G.middleText('- Baking Disabled -');
+ // remove tech
+		 for (i in G.techsOwned) {
+			 if (G.techsOwned[i].tech.name == 'Baking') {
+				 G.techsOwned.splice(i,1);
+				 G.techsOwnedNames.splice(i,1);
+				 G.applyKnowEffects(G.getDict('Baking'),true,true);
+				 G.update['tech']();
+				 break;
+			 }
+		 }
+
+		 // change mode on existing firekeepers from cremate to default
+		 G.convertUnitMode('firekeeper','bake','stick fires');
+	 }
+ };
+ new G.Res({
+	name:'Cake',
+	desc:'A cake made with love from [baking].//May slowly boost [happiness] when kept.',
+//		icon:[11,7,13,5],
+	icon:[4,1,'heritageSheet'],
+	tick:function(me,tick) {
+		var changed = me.amount*0.15;
+		G.pseudoGather(G.getRes('happiness'),randomFloor(changed));
+		var toBreak=me.amount*0.001;
+		var spent=G.lose(me.name,randomFloor(toBreak),'eating');
+	},
+	category:'food',
+});
+
+// Add new research to unlock cremation	
+new G.Tech({
+	name:'Baking',
+	desc:'@Fruits can be made into delicious cakes, it increases happiness.',
+	icon:[0,1,'heritageSheet'],
+	cost:{'insight':10},
+	req:{'fire-making':true,'ritualism':true,'enablebaking':"on"},
+	effects:[
+	],
+});
+
+// Add cremate mode to firekeepers with the required effect
+G.getDict('firekeeper').modes['Bake']={
+	name:'Bake',
+	desc:'Turn 2 [fruit] with [fire pit,fire] on a pyre of 1 [log], and make a cake.',
+//		icon:[16,2,8,3,13,7],
+	icon:[2,1,'heritageSheet'],
+	req:{'Baking':true,'enablebaking':"on"}
+};
+G.getDict('firekeeper').effects.push({
+	type:'convert',from:{'fruit':2,'herb':10,'log':1,'fire pit':0.5},into:{'Cake':1},every:10,mode:'Bake'
+});
+
+// Add setting to turn the whole thing on or off
+G.addHSetting({
+	name:'enablebaking',
+	displayName:'Enable Baking',
+	desc:'Enable the appearance of creation tech and abilities.',
+	icon:[16,2,8,3,13,7],
+	effects:{
+		'onChange':{func:G.callbackEnableBaking}
+	},
+});
 
 /************************************************
  *            HERITAGE OPTIONS TAB              *
